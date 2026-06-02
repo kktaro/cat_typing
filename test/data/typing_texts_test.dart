@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('kCatTypingTexts', () {
-    test('contains between 3 and 5 entries as the design specifies', () {
-      expect(kCatTypingTexts.length, inInclusiveRange(3, 5));
+    test('contains 50 entries as the design specifies', () {
+      expect(kCatTypingTexts.length, 50);
     });
 
     test('every entry is non-empty', () {
@@ -14,9 +14,8 @@ void main() {
     });
 
     test('every entry has a reasonable length for a typing exercise', () {
-      // The CLAUDE.md design suggests ~80-150 characters per entry.
       for (final text in kCatTypingTexts) {
-        expect(text.runes.length, inInclusiveRange(60, 200));
+        expect(text.runes.length, inInclusiveRange(200, 300));
       }
     });
 

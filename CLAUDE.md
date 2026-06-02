@@ -39,7 +39,7 @@ lib/
   main.dart                         # ProviderScope + runApp
   app.dart                          # MaterialApp、テーマ
   data/
-    typing_texts.dart               # 猫テーマ長文（const リスト 3〜5 本）
+    typing_texts.dart               # 猫テーマ長文（const リスト 50 本、各 200〜300 文字程度）
   domain/
     typing_status.dart              # enum TypingStatus
     typing_session.dart             # イミュータブルなゲーム状態モデル
