@@ -73,6 +73,32 @@ void main() {
       );
       expect(session.correctPrefixLength, 6);
     });
+
+    test(
+        'counts surrogate pair characters as two UTF-16 code units '
+        '(emoji-aware spec)', () {
+      // 🐱 occupies two UTF-16 code units; typing the same emoji advances
+      // correctPrefixLength by 2.
+      const session = TypingSession(
+        targetText: '🐱猫',
+        typedText: '🐱',
+      );
+      expect(session.correctPrefixLength, 2);
+    });
+
+    test(
+        'returns 0 when surrogate pairs diverge on the high-surrogate code unit',
+        () {
+      // 🐱 (U+1F431) and 🐶 (U+1F436) share the same high surrogate (0xD83D),
+      // so the first code unit matches but the second (low surrogate) differs.
+      const session = TypingSession(targetText: '🐱', typedText: '🐶');
+      expect(session.correctPrefixLength, 1);
+    });
+
+    test('returns 0 when both texts are empty', () {
+      const session = TypingSession(targetText: '', typedText: '');
+      expect(session.correctPrefixLength, 0);
+    });
   });
 
   group('isCompleted', () {
@@ -238,6 +264,25 @@ void main() {
       session.copyWith(typedText: 'ね', mistakeCount: 99);
       expect(session.typedText, '');
       expect(session.mistakeCount, 0);
+    });
+
+    test(
+        'preserves existing nullable fields when null is passed '
+        '(no reset semantics)', () {
+      final start = DateTime(2026, 1, 1);
+      final finish = start.add(const Duration(seconds: 5));
+      final session = TypingSession(
+        targetText: '猫',
+        typedText: '猫',
+        status: TypingStatus.finished,
+        startedAt: start,
+        finishedAt: finish,
+      );
+
+      // Passing null does not reset; the `??` fallback keeps the original.
+      final copy = session.copyWith();
+      expect(copy.startedAt, start);
+      expect(copy.finishedAt, finish);
     });
   });
 }

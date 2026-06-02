@@ -71,6 +71,15 @@ void main() {
       expect(find.text('😺'), findsOneWidget);
     });
 
+    testWidgets('still shows 😺 just below 70%', (tester) async {
+      // progress = 6/10 = 0.6 < 0.7 -> 😺
+      await _pump(
+        tester,
+        const TypingSession(targetText: 'abcdefghij', typedText: 'abcdef'),
+      );
+      expect(find.text('😺'), findsOneWidget);
+    });
+
     testWidgets('shows 😻 at exactly 70%', (tester) async {
       // progress = 7/10 = 0.7
       await _pump(
@@ -151,6 +160,41 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 600));
 
+      expect(find.text('😿'), findsNothing);
+    });
+
+    testWidgets(
+        'second mistake within the 500ms window restarts the timer so 😿 '
+        'persists for ~500ms past the most recent mistake', (tester) async {
+      final container = await _pumpWithContainer(
+        tester,
+        const TypingSession(targetText: '猫が好き'),
+      );
+      final notifier = container.read(gameControllerProvider.notifier);
+
+      // First mistake -> 😿
+      notifier.onConfirmedTextChanged('X', '');
+      await tester.pump();
+      expect(find.text('😿'), findsOneWidget);
+
+      // Move forward 300ms (still inside the first 500ms window).
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('😿'), findsOneWidget);
+
+      // Second mistake before the first timer fires -> restart timer.
+      notifier.onConfirmedTextChanged('XY', 'X');
+      await tester.pump();
+      expect(find.text('😿'), findsOneWidget);
+
+      // 300ms after the second mistake, still inside the new 500ms window,
+      // so 😿 must still be visible (proves the old timer was cancelled —
+      // otherwise it would have fired at total 500ms i.e. 200ms ago).
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.text('😿'), findsOneWidget);
+
+      // Drain the remaining time and the AnimatedSwitcher fade.
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('😿'), findsNothing);
     });
   });

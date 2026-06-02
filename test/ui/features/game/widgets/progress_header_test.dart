@@ -48,8 +48,12 @@ void main() {
       expect(_bar(tester).value, 0.5);
     });
 
-    testWidgets('rounds the progress percent toward floor', (tester) async {
-      // 3 / 7 ≈ 0.4286 -> "43 %" (rounded via toStringAsFixed(0))
+    testWidgets(
+        'displays progress percent as an integer using toStringAsFixed(0)',
+        (tester) async {
+      // 3 / 7 ≈ 0.4286 -> 42.857… -> "43" (rounded to nearest by
+      // toStringAsFixed). Not a floor — 42.857 would render as "42" if it
+      // were floor-rounded.
       await _pump(
         tester,
         const TypingSession(targetText: '猫が好きなのだ', typedText: '猫が好'),

@@ -184,6 +184,44 @@ void main() {
       expect(session.typedText, '');
       expect(session.mistakeCount, 0);
     });
+
+    test(
+        'updates typedText but does not change mistakeCount when previous '
+        'and confirmed are the same length but differ in content', () {
+      // Can happen with IME conversion replacing characters in place — the
+      // new-character loop only fires when confirmed grows, so mistakes
+      // should not be re-counted here.
+      final container = _makeContainer('猫が好き');
+      final notifier = container.read(gameControllerProvider.notifier);
+
+      notifier.onConfirmedTextChanged('犬', '');
+      final mistakeAfterFirst =
+          container.read(gameControllerProvider).mistakeCount;
+      expect(mistakeAfterFirst, 1);
+
+      notifier.onConfirmedTextChanged('猫', '犬');
+
+      final session = container.read(gameControllerProvider);
+      expect(session.typedText, '猫');
+      expect(session.mistakeCount, mistakeAfterFirst);
+    });
+
+    test('completion exit does not double-record on empty deletions', () {
+      // Sanity: deleting characters after finish has no effect because the
+      // finished guard returns early.
+      final container = _makeContainer('猫');
+      final notifier = container.read(gameControllerProvider.notifier);
+
+      notifier.onConfirmedTextChanged('猫', '');
+      final snapshot = container.read(gameControllerProvider);
+
+      notifier.onConfirmedTextChanged('', '猫');
+
+      final after = container.read(gameControllerProvider);
+      expect(after.typedText, snapshot.typedText);
+      expect(after.status, TypingStatus.finished);
+      expect(after.mistakeCount, snapshot.mistakeCount);
+    });
   });
 
   group('GameController.reset', () {
